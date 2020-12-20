@@ -1,0 +1,22 @@
+{{- if .Values.secrets.tls.enabled -}}
+{{- $certificate := .Values.secrets.tls.certificate -}}
+{{- $key := .Values.secrets.tls.key -}}
+
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ include "thebgrdservice.name" . }}
+  {{- if .Values.namespace.enabled }}
+  namespace: {{ .Values.namespace.name }}
+  {{- end }}
+  labels:
+    app: {{ include "thebgrdservice.name" . }}
+    chart: {{ include "thebgrdservice.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+type: kubernetes.io/tls
+data:
+  tls.crt: {{ $certificate }}
+  tls.key: {{ $key }}
+---
+{{- end }}

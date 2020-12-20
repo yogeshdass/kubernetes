@@ -1,0 +1,22 @@
+apiVersion: {{ .Values.serviceApiVersion }}
+kind: Service
+metadata:
+  name: {{ include "tomcat.fullname" . }}
+  {{- if .Values.namespace.enabled }}
+  namespace: {{ .Values.namespace.name }}
+  {{- end }}
+  labels:
+    app: {{ include "tomcat.name" . }}
+    chart: {{ include "tomcat.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.ports.servicePort }}
+      targetPort: {{ .Values.service.ports.containerPort }}
+      protocol: TCP
+      name: {{ .Values.service.ports.name }}
+  selector:
+    app: {{ include "tomcat.name" . }}
+    release: {{ .Release.Name }}

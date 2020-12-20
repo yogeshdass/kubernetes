@@ -1,0 +1,52 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: pod-deploy
+spec:
+  replicas: 10
+  template:
+    metadata:
+      labels:
+        app: real-pod
+        zone: prod
+        version: 1.0.0.0
+    spec:
+      volumes:
+      - name: shared-drive
+        emptyDir: {}
+      containers:
+      - name: nginx-cont
+        image: yogeshdass/nginx:v1
+        ports:
+        - containerPort: 80
+        volumeMounts:
+        - name: shared-drive
+          mountPath: /usr/share/nginx/html
+      - name: cron-cont
+        image: yogeshdass/datecron:latest
+        volumeMounts:
+        - name: shared-drive
+          mountPath: /html
+        command: ["/bin/sh", "-c"]
+        args:
+          - while true; do
+              date >> /html/index.html;
+              sleep 1;
+            done
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: privyet-service
+  labels:
+    app: real-pod
+    zone: prod
+    version: 1.0.0.0
+spec:
+  type: NodePort
+  ports:
+  - port: 80
+    nodePort: 30000
+    protocol: TCP
+  selector:
+    app: real-pod

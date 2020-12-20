@@ -1,0 +1,26 @@
+deploymentApiVersion: apps/v1
+
+microServiceVersion: "1.10.0.0"
+deploymentStack: "blueooldored"
+#deploymentStack: "greenonewoblack"
+
+namespace:
+  enabled: true
+  name: development
+
+replicaCount: 2
+
+image:
+  repository: paulbouwer/hello-kubernetes
+  tag: 1.5
+  pullPolicy: Always
+
+container:
+  portName: tomcat-port
+  number: 8080
+  message: "BLUE STACK"
+
+resources: 
+  requests:
+    cpu: 100m
+    memory: 128Mi

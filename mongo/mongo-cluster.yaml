@@ -1,0 +1,225 @@
+kind: Namespace
+apiVersion: v1
+metadata:
+  name:  development
+  labels: 
+    env:  development
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: pv-001
+  namespace:  development
+  labels:
+    env: development
+    type: EBS
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  awsElasticBlockStore:
+    volumeID: vol-0b31aac0217dab226
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: pvc-001
+  namespace:  development
+  labels:
+    env: development
+    type: EBS
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+  selector:
+    matchLabels:
+      env: development
+      type: EBS
+# ---
+# kind: Service
+# apiVersion: v1
+# metadata:
+#   namespace: development
+#   name:  mongodb-configdb-headless-service
+#   labels:
+#     app: mongodb-configdb
+# spec:
+#   clusterIP: None
+#   ports:
+#   - port:  27019
+#     targetPort: 27019
+#     name:  mongo-port
+#   selector:
+#     role: mongodb-configdb
+# ---
+# #Create ConfigDB server
+# kind: StatefulSet
+# apiVersion: apps/v1
+# metadata:
+#   namespace: development
+#   name:  mongodb-configdb
+# spec:
+#   serviceName: mongodb-configdb-headless-statefulset
+#   replicas: 1
+#   selector:
+#     matchLabels:
+#       role: mongodb-configdb
+#   template:
+#     metadata:
+#       labels:
+#         role: mongodb-configdb
+#     spec:
+#       affinity:
+#         podAntiAffinity:
+#           preferredDuringSchedulingIgnoredDuringExecution:
+#           - weight: 100
+#             podAffinityTerm:
+#               topologyKey: kubernetes.io/hostname
+#       terminationGracePeriodSeconds: 10
+#       containers:
+#         - name: mongodb-configdb-container
+#           image: mongo
+#           command:
+#             - "mongod"
+#             - "--port"
+#             - "27019"
+#             - "--dbpath"
+#             - "/mongo-disk"
+#             - "--bind_ip"
+#             - "0.0.0.0"
+#             - "--configsvr"
+#           resources:
+#             requests:
+#               cpu: 50m
+#               memory: 100Mi
+#           ports:
+#             - containerPort: 27019
+#           volumeMounts:
+#             - name: mongodb-configdb-persistent-storage-claim
+#               mountPath: /mongo-disk
+#   volumeClaimTemplates:
+#   - metadata:
+#       name: mongodb-configdb-persistent-storage-claim
+#       annotations:
+#         volume.beta.kubernetes.io/storage-class: "fast"
+#     spec:
+#       accessModes: [ "ReadWriteOnce" ]
+#       resources:
+#         requests:
+#           storage: 5Gi
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   name: mongodb-1-headless-service
+#   namespace: development
+#   labels:
+#     name: mongodb-1
+# spec:
+#   ports:
+#   - port: 27017
+#     targetPort: 27017
+#   clusterIP: None
+#   selector:
+#     role: mongodb-1
+# ---
+# apiVersion: apps/v1
+# kind: StatefulSet
+# metadata:
+#   name: mongodb-1
+#   namespace: development
+# spec:
+#   selector:
+#     matchLabels:
+#       role: mongodb-1
+#   serviceName: mongodb-1-headless-service
+#   replicas: 1
+#   template:
+#     metadata:
+#       labels:
+#         role: mongodb-1
+#         replicaset: "2"
+#     spec:
+#       affinity:
+#         podAntiAffinity:
+#           preferredDuringSchedulingIgnoredDuringExecution:
+#           - weight: 100
+#             podAffinityTerm:
+#               topologyKey: kubernetes.io/hostname
+#       terminationGracePeriodSeconds: 10
+#       containers:
+#         - name: mongodb-1-container
+#           image: mongo
+#           command:
+#             - "mongod"
+#             - "--port"
+#             - "27017"
+#             - "--bind_ip"
+#             - "0.0.0.0"
+#             - "--replSet"
+#             - "2"
+#             - "--dbpath"
+#             - "/mongo-disk"
+#           resources:
+#             requests:
+#               cpu: 50m
+#               memory: 100Mi
+#           ports:
+#             - containerPort: 27017
+#           volumeMounts:
+#             - name: mongo-1-persistent-storage-claim
+#               mountPath: /mongo-disk
+#   volumeClaimTemplates:
+#   - metadata:
+#       name: mongo-1-persistent-storage-claim
+#       annotations:
+#         volume.beta.kubernetes.io/storage-class: "fast"
+#     spec:
+#       accessModes: [ "ReadWriteOnce" ]
+#       resources:
+#         requests:
+#           storage: 10Gi
+# ---
+# apiVersion: apps/v1
+# kind: Deployment
+# metadata:
+#   name: mongos
+#   namespace: development
+# spec:
+#   selector:
+#     matchLabels:
+#         role: mongos
+#   replicas: 2
+#   template:
+#     metadata:
+#       labels:
+#         role: mongos
+#     spec:
+#       affinity:
+#         podAntiAffinity:
+#           preferredDuringSchedulingIgnoredDuringExecution:
+#           - weight: 100
+#             podAffinityTerm:
+#               topologyKey: kubernetes.io/hostname
+#       terminationGracePeriodSeconds: 10
+#       containers:
+#         - name: mongos-container
+#           image: mongo
+#           command:
+#             - "mongos"
+#             - "--port"
+#             - "27017"
+#             - "--bind_ip"
+#             - "0.0.0.0"
+#             - "--configdb"
+#             - "mongodb-configdb-0.mongodb-configdb-headless-service.development.svc.cluster.local:27019"
+#           resources:
+#             requests:
+#               cpu: 50m
+#               memory: 100Mi
+#           ports:
+#             - containerPort: 27017

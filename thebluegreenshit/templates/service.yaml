@@ -1,0 +1,23 @@
+apiVersion: {{ .Values.serviceApiVersion }} 
+kind: Service
+metadata:
+  name: {{ include "thebluegreenshit.fullname" . }}
+  {{- if .Values.namespace.enabled }}
+  namespace: {{ .Values.namespace.name }}
+  {{- end }}
+  labels:
+    app: {{ include "thebluegreenshit.name" . }}
+    chart: {{ include "thebluegreenshit.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.ports.servicePort }}
+      targetPort: {{ .Values.service.ports.containerPort }}
+      protocol: TCP
+      name: {{ .Values.service.ports.name }}
+  selector:
+    app: {{ include "thebluegreenshit.name" . }}
+    release: {{ .Release.Name }}
+    version: {{ .Values.serviceVersion }} 

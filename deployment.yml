@@ -1,0 +1,27 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: privyet-deploy
+spec:
+#create 10 replicas of below pod
+  replicas: 10
+#wait fo 10 seconds to make pod come up and remove the other pod
+  minReadySeconds: 10
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+# take one pod down at a time
+      maxUnavailable: 1
+#not have more than one extra pod while rolling
+      maxSurge: 1
+  template:
+    metadata:
+      labels:
+        app: hey-world
+    spec:
+      containers:
+      - name: hey-pod
+#change the image
+        image: yogeshdass/nginx:v1
+        ports:
+        - containerPort: 80

@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  name: hey-repset
+spec:
+  replicas: 5
+#it should match with labels in template
+  selector:
+    app: hey-world
+  template:
+    metadata:
+      labels:
+        app: hey-world
+    spec:
+      containers:
+        - name: hey-cunt
+          image: yogeshdass/nginx:v1
+          ports:
+          - containerPort: 80

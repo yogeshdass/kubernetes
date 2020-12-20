@@ -1,0 +1,51 @@
+apiVersion: autoscaling/v2beta2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "tomcat.fullname" . }}
+  {{- if .Values.namespace.enabled }}
+  namespace: {{ .Values.namespace.name }}
+  {{- end }}
+  labels:
+    labels:
+    app: {{ include "tomcat.name" . }}
+    chart: {{ include "tomcat.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "tomcat.fullname" . }}
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 3
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 95
+  # - type: Pods
+  #   pods:
+  #     metric:
+  #       name: packets-per-second
+  #     target:
+  #       type: AverageValue
+  #       averageValue: 1k
+  # - type: Object
+  #   object:
+  #     metric:
+  #       name: requests-per-second
+  #     describedObject:
+  #       apiVersion: networking.k8s.io/v1beta1
+  #       kind: Ingress
+  #       name: main-route
+  #     target:
+  #       type: Value
+  #       value: 1k

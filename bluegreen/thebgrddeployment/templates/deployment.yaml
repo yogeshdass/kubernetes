@@ -1,0 +1,55 @@
+apiVersion: {{ .Values.deploymentApiVersion }}
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  {{- if .Values.namespace.enabled }}
+  namespace: {{ .Values.namespace.name }}
+  {{- end }}
+  labels:
+    app: {{ include "thebgrddeployment.name" . }}
+    chart: {{ include "thebgrddeployment.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "thebgrddeployment.name" . }}
+      release: {{ .Release.Name }}
+      # Select the the Label of Deployment which are static in svc and deploy
+      version: {{ .Values.microServiceVersion }}
+      deploymentStack: {{ .Values.deploymentStack }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "thebgrddeployment.name" . }}
+        release: {{ .Release.Name }}
+        # Create Labels to link deployment to service
+        version: {{ .Values.microServiceVersion }}
+        deploymentStack: {{ .Values.deploymentStack }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: {{ .Values.container.portName }}
+              containerPort: {{ .Values.container.number }}
+              protocol: TCP
+          env:
+            - name: MESSAGE
+              value: "{{ .Values.container.message }}"
+          resources:
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

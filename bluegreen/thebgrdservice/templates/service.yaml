@@ -1,0 +1,23 @@
+apiVersion: {{ .Values.serviceApiVersion }}
+kind: Service
+metadata:
+  name: {{ include "thebgrdservice.name" . }}
+  {{- if .Values.namespace.enabled }}
+  namespace: {{ .Values.namespace.name }}
+  {{- end }}
+  labels:
+    app: {{ include "thebgrdservice.name" . }}
+    chart: {{ include "thebgrdservice.chart" . }}
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+spec:
+  type: {{ .Values.service.type }}
+  ports:
+    - port: {{ .Values.service.ports.servicePort }}
+      targetPort: {{ .Values.service.ports.containerPort }}
+      protocol: TCP
+      name: {{ .Values.service.ports.name }}
+  selector:
+    # Select the the Labels of Deployment which are static in svc and deploy
+    version: {{ .Values.microServiceVersion }} 
+    deploymentStack: {{ .Values.deploymentStack }}
